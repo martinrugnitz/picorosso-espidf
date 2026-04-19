@@ -1,4 +1,3 @@
-//#include <stdint.h>
 #ifndef __ROSOUT_H
 #define __ROSOUT_H
 
@@ -20,5 +19,14 @@ static picoros_publisher_t publisher_log = {
 typedef struct {
     picoros_publisher_t publisher_log;
 } rosout_t;
+
+bool rosout_setup(rosout_t *r, const char *topic_name);
+
+void rosout_out(rosout_t *rosout,
+                const char *s,
+                const char *file,
+                const char *func,
+                uint32_t line,
+                uint8_t level);
 
 #endif // __ROSOUT_H

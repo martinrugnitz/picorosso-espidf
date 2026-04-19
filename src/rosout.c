@@ -47,7 +47,7 @@ void rosout_out(rosout_t *r,
         .line = line,
     };
 
-    set_timestamp(msg_log.stamp);
+    picorosso_set_timestamp(&msg_log.stamp);
 
     pr_publish(r->publisher_log, msg_log);
 }

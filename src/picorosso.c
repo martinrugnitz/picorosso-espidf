@@ -25,7 +25,7 @@ void picorosso_set_timestamp(ros_Time *stamp)
     stamp->nanosec = now.tv_nsec;
 }
 
-void picorosso_set_timestamp(ros_Time *stamp, z_clock_t *now)
+void picorosso_set_timestamp_now(ros_Time *stamp, z_clock_t *now)
 {
     stamp->sec = now->tv_sec;
     stamp->nanosec = now->tv_nsec;
@@ -111,13 +111,13 @@ bool picorosso_setup(const char *node_name,
 #endif
 
     // Initialize auxiliary modules
-    rosout_setup(picorosso_rosout, "rosout");
+    rosout_setup(&picorosso_rosout, "rosout");
 
     char reset_reason_str[50] = {0};
     sprintf(reset_reason_str, "Coming from Reset Core0: %d %s", reset_reason_0, reset_reason_string(reset_reason_0));
-    rosout_out(picorosso_rosout, reset_reason_str, __FILE__, __func__, __LINE__, ROSLOG_INFO);
+    rosout_out(&picorosso_rosout, reset_reason_str, __FILE__, __func__, __LINE__, ROSLOG_INFO);
     sprintf(reset_reason_str, "Coming from Reset Core1: %d %s", reset_reason_1, reset_reason_string(reset_reason_1));
-    rosout_out(picorosso_rosout, reset_reason_str, __FILE__, __func__, __LINE__, ROSLOG_INFO);
+    rosout_out(&picorosso_rosout, reset_reason_str, __FILE__, __func__, __LINE__, ROSLOG_INFO);
 
     return true;
 }

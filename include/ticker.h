@@ -7,6 +7,6 @@
 #define ROSLOG_ERROR 40
 #define ROSLOG_FATAL 50
 
-static bool ticker_setup(const char *topic_name);
+bool ticker_setup(const char *topic_name);
 
 #endif // __TICKER_H
