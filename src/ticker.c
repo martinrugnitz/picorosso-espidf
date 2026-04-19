@@ -19,14 +19,13 @@ static picoros_publisher_t publisher_tick = {
         },
 };
 
-Ticker::Ticker() {}
-
-static void ticker_task(void *)
+static void ticker_task(void *arg)
 {
   TickType_t last_wake_time = xTaskGetTickCount();
-  while (true)
+  static int loop_count = 0;
+
+  while (1)
   {
-    static int loop_count;
     ros_Int32 msg_tick = loop_count++;
 
     pr_publish(publisher_tick, msg_tick);
@@ -35,13 +34,18 @@ static void ticker_task(void *)
   }
 }
 
-bool Ticker::setup(const char *topic_name)
+bool ticker_setup(const char *topic_name)
 {
   ESP_LOGD(TAG, "Setting up...");
 
+  if (topic_name == NULL)
+  {
+    topic_name = "tick";
+  }
+
   ESP_LOGI(TAG, "Declaring publisher on [%s]", topic_name);
   publisher_tick.topic.name = topic_name;
-  picoros_publisher_declare(&PicoRosso::node, &publisher_tick);
+  picoros_publisher_declare(&picorosso_node, &publisher_tick);
 
   xTaskCreate(
       ticker_task,

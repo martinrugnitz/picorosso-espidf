@@ -15,26 +15,19 @@
 #define MESSAGE_TIMEOUT_US 200 * 1000       // time to wait for a response
 #define MESSAGE_COUNT 20                    // measures averaged during estimate_offset
 
-enum SyncTimeStates
+typedef enum
 {
   SYNC_TIME_UNSYNCED,
   SYNC_TIME_SYNCING,
   SYNC_TIME_SYNCED
-};
+} sync_time_state_t;
 
-class SyncTime
-{
-public:
-  SyncTime();
-  static bool setup(const char *topic_request = "sync_time_request",
-                    const char *topic_response = "sync_time_response",
-                    const char *source = "sync_time");
+extern sync_time_state_t sync_time_state;
 
-  static bool synchronize_clock();
-
-  static void trigger_sync();
-
-  static SyncTimeStates sync_state;
-};
+bool sync_time_setup(const char *topic_request,
+                     const char *topic_response,
+                     const char *source);
+bool sync_time_synchronize_clock(void);
+void sync_time_trigger(void);
 
 #endif // __SYNC_TIME_H

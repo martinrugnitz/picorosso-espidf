@@ -1,4 +1,4 @@
-#include <cstdint>
+//#include <stdint.h>
 #ifndef __ROSOUT_H
 #define __ROSOUT_H
 
@@ -8,18 +8,17 @@
 #define ROSLOG_ERROR 40
 #define ROSLOG_FATAL 50
 
-class Rosout
-{
-public:
-  Rosout();
-  static bool setup(const char *topic_name = "rosout");
-
-  static void out(const char *s,
-                  const char *file = "",
-                  const char *func = "",
-                  uint32_t line = 0,
-                  uint8_t level = ROSLOG_INFO);
-
+static picoros_publisher_t publisher_log = {
+    .topic =
+        {
+            .name = "rosout",
+            .type = ROSTYPE_NAME(ros_Log),
+            .rihs_hash = ROSTYPE_HASH(ros_Log),
+        },
 };
+
+typedef struct {
+    picoros_publisher_t publisher_log;
+} rosout_t;
 
 #endif // __ROSOUT_H

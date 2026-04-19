@@ -6,32 +6,29 @@
 static const char *TAG = "picorosso";
 static const char *zenoh_mode = "client";
 
-picoros_node_t PicoRosso::node;
-uint8_t PicoRosso::publisher_buf[PUBLISHER_BUF_SIZE];
-SemaphoreHandle_t PicoRosso::bufSemaphore = NULL;
+picoros_node_t picorosso_node;
+uint8_t picorosso_publisher_buf[PUBLISHER_BUF_SIZE];
+SemaphoreHandle_t picorosso_bufSemaphore = NULL;
 
 #if defined(USE_SYNC_TIME)
 #include "sync_time.h"
-SyncTime sync_time;
 #endif
 
 #include "rosout.h"
-Rosout rosout;
+rosout_t picorosso_rosout;
 
-PicoRosso::PicoRosso() {}
-
-void PicoRosso::set_timestamp(ros_Time &stamp)
+void picorosso_set_timestamp(ros_Time *stamp)
 {
     z_clock_t now;
     clock_gettime(CLOCK_REALTIME, &now);
-    stamp.sec = now.tv_sec;
-    stamp.nanosec = now.tv_nsec;
+    stamp->sec = now.tv_sec;
+    stamp->nanosec = now.tv_nsec;
 }
 
-void PicoRosso::set_timestamp(ros_Time &stamp, z_clock_t &now)
+void picorosso_set_timestamp(ros_Time *stamp, z_clock_t *now)
 {
-    stamp.sec = now.tv_sec;
-    stamp.nanosec = now.tv_nsec;
+    stamp->sec = now->tv_sec;
+    stamp->nanosec = now->tv_nsec;
 }
 
 static const char *reset_reason_string(const RESET_REASON reason)
@@ -73,17 +70,17 @@ static const char *reset_reason_string(const RESET_REASON reason)
     }
 }
 
-bool PicoRosso::setup(const char *node_name,
+bool picorosso_setup(const char *node_name,
                       const char *zenoh_router_address,
                       const uint32_t domain_id)
 {
     RESET_REASON reset_reason_0 = rtc_get_reset_reason(0);
     RESET_REASON reset_reason_1 = rtc_get_reset_reason(1);
 
-    bufSemaphore = xSemaphoreCreateBinary();
-    xSemaphoreGive(PicoRosso::bufSemaphore);
+    picorosso_bufSemaphore = xSemaphoreCreateBinary();
+    xSemaphoreGive(picorosso_bufSemaphore);
 
-    PicoRosso::node = {
+    picorosso_node = (picoros_node_t){
         .name = (char *)node_name,
         .domain_id = domain_id,
     };
@@ -101,26 +98,26 @@ bool PicoRosso::setup(const char *node_name,
     }
     ESP_LOGD(TAG, "RMW initialized.");
 
-    ESP_LOGI(TAG, "Starting pico-ros node [%s] domain [%lu]\r", node.name, node.domain_id);
-    picoros_node_init(&node);
+    ESP_LOGI(TAG, "Starting pico-ros node [%s] domain [%lu]\r", picorosso_node.name, picorosso_node.domain_id);
+    picoros_node_init(&picorosso_node);
 
 #if defined(USE_SYNC_TIME)
     // Time synchronization
-    sync_time.setup();
-    if (!sync_time.synchronize_clock())
+    sync_time_setup(NULL, NULL, NULL);
+    if (!sync_time_synchronize_clock())
     {
         ESP_LOGE(TAG, "synch time failed!");
     }
 #endif
 
     // Initialize auxiliary modules
-    rosout.setup("rosout");
+    rosout_setup(picorosso_rosout, "rosout");
 
-    char reset_reason_str[50]{0};
+    char reset_reason_str[50] = {0};
     sprintf(reset_reason_str, "Coming from Reset Core0: %d %s", reset_reason_0, reset_reason_string(reset_reason_0));
-    rosout.out(reset_reason_str, __FILE__, __func__, __LINE__, ROSLOG_INFO);
+    rosout_out(picorosso_rosout, reset_reason_str, __FILE__, __func__, __LINE__, ROSLOG_INFO);
     sprintf(reset_reason_str, "Coming from Reset Core1: %d %s", reset_reason_1, reset_reason_string(reset_reason_1));
-    rosout.out(reset_reason_str, __FILE__, __func__, __LINE__, ROSLOG_INFO);
+    rosout_out(picorosso_rosout, reset_reason_str, __FILE__, __func__, __LINE__, ROSLOG_INFO);
 
     return true;
 }

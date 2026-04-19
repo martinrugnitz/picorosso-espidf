@@ -7,12 +7,6 @@
 #define ROSLOG_ERROR 40
 #define ROSLOG_FATAL 50
 
-class Ticker
-{
-public:
-  Ticker();
-  static bool setup(const char *topic_name = "tick");
-
-};
+static bool setup(const char *topic_name);
 
 #endif // __TICKER_H

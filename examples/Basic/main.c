@@ -2,22 +2,16 @@
 #define ZENOH_NODE_NAME "mi_node"
 
 #include "picorosso.h"
-PicoRosso picorosso;
-
 #include "ticker.h"
-Ticker ticker;
 
-extern "C"
-{
-    void app_main(void);
-}
+PicoRosso picorosso;
+Ticker ticker;
 
 void app_main()
 {
-    // PicoRosso initalization //////////////////////////////
-    picorosso.setup(ZENOH_NODE_NAME, ZENOH_ROUTER_ADDRESS);
+    picorosso_setup(picorosso, ZENOH_NODE_NAME, ZENOH_ROUTER_ADDRESS);
 
-    ticker.setup("tick");
+    ticker_setup(ticker, "tick");
 
     while (true)
     {

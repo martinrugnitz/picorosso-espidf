@@ -18,7 +18,7 @@ static char msg_token[20]; // 64bit number as string
 static int64_t offset_ns;
 static int64_t rtt_ns;
 
-SyncTimeStates SyncTime::sync_state = SYNC_TIME_UNSYNCED;
+sync_time_state_t sync_time_state = SYNC_TIME_UNSYNCED;
 
 static picoros_publisher_t publisher_sync_request = {
     .topic = {
@@ -42,11 +42,9 @@ picoros_subscriber_t subscription_sync_response = {
     .user_callback = sync_response_cb,
 };
 
-SyncTime::SyncTime() {}
-
-void SyncTime::trigger_sync()
+void sync_time_trigger()
 {
-  sync_state = SYNC_TIME_SYNCING;
+  sync_time_state = SYNC_TIME_SYNCING;
 
   // memset(msg_token, 0, sizeof(msg_token));
   sprintf(msg_token, "%llu", esp_timer_get_time()); // a "random" number to a msg_token
@@ -57,7 +55,7 @@ void SyncTime::trigger_sync()
 
   pr_publish(publisher_sync_request, msg_sync_time_request);
 
-  t0 = {
+  t0 = (ros_Time){
       .sec = (int32_t)now.tv_sec,
       .nanosec = (uint32_t)now.tv_nsec,
   };
@@ -66,7 +64,7 @@ void SyncTime::trigger_sync()
 static void sync_response_cb(uint8_t *rx_data, size_t data_len)
 {
   z_clock_t now = z_clock_now();
-  if (SyncTime::sync_state != SYNC_TIME_SYNCING)
+  if (sync_time_state != SYNC_TIME_SYNCING)
   {
     ESP_LOGW(TAG, "non-requested response detected.");
     return;
@@ -93,7 +91,7 @@ static void sync_response_cb(uint8_t *rx_data, size_t data_len)
     offset_ns = ((t1_ns - t0_ns) + (t2_ns - t3_ns)) / 2;
     rtt_ns = (t3_ns - t0_ns) - (t2_ns - t1_ns);
 
-    SyncTime::sync_state = SYNC_TIME_SYNCED;
+    sync_time_state = SYNC_TIME_SYNCED;
   }
   else
   {
@@ -101,22 +99,22 @@ static void sync_response_cb(uint8_t *rx_data, size_t data_len)
   }
 }
 
-bool SyncTime::synchronize_clock()
+bool sync_time_synchronize_clock()
 {
   ESP_LOGD(TAG, "Waiting for server...");
 
   uint64_t wait_start_time_us = esp_timer_get_time();
-  while (esp_timer_get_time() - wait_start_time_us < WAIT_FOR_SERVER_US && sync_state != SYNC_TIME_SYNCED)
+  while (esp_timer_get_time() - wait_start_time_us < WAIT_FOR_SERVER_US && sync_time_state != SYNC_TIME_SYNCED)
   {
-    trigger_sync();
+    sync_time_trigger();
     uint64_t start_time_us = esp_timer_get_time();
-    while (esp_timer_get_time() - start_time_us < MESSAGE_TIMEOUT_US && sync_state != SYNC_TIME_SYNCED)
+    while (esp_timer_get_time() - start_time_us < MESSAGE_TIMEOUT_US && sync_time_state != SYNC_TIME_SYNCED)
     {
       z_sleep_ms(50);
     }
   }
 
-  if (sync_state != SYNC_TIME_SYNCED)
+  if (sync_time_state != SYNC_TIME_SYNCED)
   {
     ESP_LOGE(TAG, "synch_time responder not found");
     return false;
@@ -128,15 +126,15 @@ bool SyncTime::synchronize_clock()
   int hit_count = 0;
   for (int count = 0; count < MESSAGE_COUNT; count++)
   {
-    trigger_sync();
+    sync_time_trigger();
 
     // Wait for a synchronization to complete
     uint64_t start_time_us = esp_timer_get_time();
-    while (esp_timer_get_time() - start_time_us < MESSAGE_TIMEOUT_US && sync_state != SYNC_TIME_SYNCED)
+    while (esp_timer_get_time() - start_time_us < MESSAGE_TIMEOUT_US && sync_time_state != SYNC_TIME_SYNCED)
     {
       z_sleep_ms(50);
     }
-    if (sync_state == SYNC_TIME_SYNCED)
+    if (sync_time_state == SYNC_TIME_SYNCED)
     {
       hit_count++;
       // running average, do not overflow uint64
@@ -174,7 +172,7 @@ bool SyncTime::synchronize_clock()
   }
 }
 
-bool SyncTime::setup(const char *topic_request,
+bool sync_time_setup(const char *topic_request,
                      const char *topic_response,
                      const char *source)
 {
@@ -182,11 +180,11 @@ bool SyncTime::setup(const char *topic_request,
 
   ESP_LOGI(TAG, "Declaring publisher on [%s]", topic_request);
   publisher_sync_request.topic.name = (char *)topic_request;
-  picoros_publisher_declare(&PicoRosso::node, &publisher_sync_request);
+  picoros_publisher_declare(&picorosso_node, &publisher_sync_request);
 
   ESP_LOGI(TAG, "Declaring subscriber on [%s]", topic_response);
   subscription_sync_response.topic.name = (char *)topic_response;
-  picoros_subscriber_declare(&PicoRosso::node, &subscription_sync_response);
+  picoros_subscriber_declare(&picorosso_node, &subscription_sync_response);
 
   ESP_LOGD(TAG, "Setting up done.");
   return true;
