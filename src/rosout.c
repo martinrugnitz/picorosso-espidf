@@ -21,14 +21,6 @@ typedef struct
     picoros_publisher_t publisher_log;
 } rosout_t;
 
-/*
-void rosout_init(rosout_t *r, const char *topic_name)
-{
-    r->publisher_log.topic.name = topic_name;
-    r->publisher_log.topic.type = ROSTYPE_NAME(ros_Log);
-    r->publisher_log.topic.rihs_hash = ROSTYPE_HASH(ros_Log);
-}
-*/
 bool rosout_setup(const char *topic_name)
 {
     ESP_LOGD(TAG, "Setting up...");
