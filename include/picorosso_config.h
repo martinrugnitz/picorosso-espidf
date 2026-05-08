@@ -12,7 +12,7 @@
 Use sync_time node to get synchronize
 */
 #if !defined(USE_SYNC_TIME)
-#define USE_SYNC_TIME true
+#define USE_SYNC_TIME 1
 #endif
 
 

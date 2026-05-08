@@ -5,34 +5,51 @@
 #include "picoros.h"
 #include "picoserdes.h"
 
-static const char *TAG = "picorosso";
+static const char *TAG = "rosout";
 
+static picoros_publisher_t publisher_log = {
+    .topic =
+        {
+            .name = "rosout",
+            .type = ROSTYPE_NAME(ros_Log),
+            .rihs_hash = ROSTYPE_HASH(ros_Log),
+        },
+};
+
+typedef struct
+{
+    picoros_publisher_t publisher_log;
+} rosout_t;
+
+/*
 void rosout_init(rosout_t *r, const char *topic_name)
 {
     r->publisher_log.topic.name = topic_name;
     r->publisher_log.topic.type = ROSTYPE_NAME(ros_Log);
     r->publisher_log.topic.rihs_hash = ROSTYPE_HASH(ros_Log);
 }
-
-bool rosout_setup(rosout_t *r, const char *topic_name)
+*/
+bool rosout_setup(const char *topic_name)
 {
     ESP_LOGD(TAG, "Setting up...");
 
-    r->publisher_log.topic.name = topic_name;
+    if (topic_name != NULL)
+    {
+        publisher_log.topic.name = topic_name;
+    }
 
-    picoros_publisher_declare(&picorosso_node, &r->publisher_log);
+    picoros_res_t ret = picoros_publisher_declare(&picorosso_node, &publisher_log);
 
-    ESP_LOGD(TAG, "Setting up done.");
+    ESP_LOGD(TAG, "picoros_publisher_declare up ret: [%d]", ret);
 
     z_sleep_ms(100);
 
-    rosout_out(r, "New logger active.", __FILE__, __func__, __LINE__, ROSLOG_INFO);
+    rosout_out("New logger active.", __FILE__, __func__, __LINE__, ROSLOG_INFO);
 
     return true;
 }
 
-void rosout_out(rosout_t *r,
-                const char *s,
+void rosout_out(const char *s,
                 const char *file,
                 const char *func,
                 uint32_t line,
@@ -49,5 +66,5 @@ void rosout_out(rosout_t *r,
 
     picorosso_set_timestamp(&msg_log.stamp);
 
-    pr_publish(r->publisher_log, msg_log);
+    pr_publish(publisher_log, msg_log);
 }
