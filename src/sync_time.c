@@ -178,18 +178,18 @@ bool sync_time_setup(const char *topic_request,
 {
   ESP_LOGD(TAG, "Setting up...");
 
-  ESP_LOGI(TAG, "Declaring publisher on [%s]\r", topic_request ? topic_request : "default topic");
   if (topic_request != NULL)
   {
     publisher_sync_request.topic.name = (char *)topic_request;
   }
+  ESP_LOGI(TAG, "Declaring publisher on [%s]\r", publisher_sync_request.topic.name);
   picoros_publisher_declare(&picorosso_node, &publisher_sync_request);
 
-  ESP_LOGI(TAG, "Declaring subscriber on [%s]\r", topic_response ? topic_response : "default topic");
   if (topic_request != NULL)
   {
     subscription_sync_response.topic.name = (char *)topic_response;
   }
+  ESP_LOGI(TAG, "Declaring subscriber on [%s]\r", subscription_sync_response.topic.name);
   picoros_subscriber_declare(&picorosso_node, &subscription_sync_response);
 
   ESP_LOGD(TAG, "Setting up done.");

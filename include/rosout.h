@@ -7,12 +7,6 @@
 #define ROSLOG_ERROR 40
 #define ROSLOG_FATAL 50
 
-
-/*
-typedef struct {
-    picoros_publisher_t publisher_log;
-} rosout_t;
-*/
 bool rosout_setup(const char *topic_name);
 
 void rosout_out(const char *s,

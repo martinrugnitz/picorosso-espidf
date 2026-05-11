@@ -30,14 +30,14 @@ bool rosout_setup(const char *topic_name)
         publisher_log.topic.name = topic_name;
     }
 
+    ESP_LOGI(TAG, "Declaring publisher on [%s]\r", publisher_log.topic.name);
     picoros_res_t ret = picoros_publisher_declare(&picorosso_node, &publisher_log);
-
-    ESP_LOGD(TAG, "picoros_publisher_declare up ret: [%d]", ret);
 
     z_sleep_ms(100);
 
     rosout_out("New logger active.", __FILE__, __func__, __LINE__, ROSLOG_INFO);
 
+    ESP_LOGD(TAG, "Setting up done.");
     return true;
 }
 
