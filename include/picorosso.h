@@ -9,7 +9,6 @@
 #include "rosout.h"
 
 extern picoros_node_t picorosso_node;
-extern rosout_t picorosso_rosout;
 
 extern uint8_t picorosso_publisher_buf[PUBLISHER_BUF_SIZE];
 extern SemaphoreHandle_t picorosso_bufSemaphore;

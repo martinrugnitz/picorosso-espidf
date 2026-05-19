@@ -7,23 +7,9 @@
 #define ROSLOG_ERROR 40
 #define ROSLOG_FATAL 50
 
-static picoros_publisher_t publisher_log = {
-    .topic =
-        {
-            .name = "rosout",
-            .type = ROSTYPE_NAME(ros_Log),
-            .rihs_hash = ROSTYPE_HASH(ros_Log),
-        },
-};
+bool rosout_setup(const char *topic_name);
 
-typedef struct {
-    picoros_publisher_t publisher_log;
-} rosout_t;
-
-bool rosout_setup(rosout_t *r, const char *topic_name);
-
-void rosout_out(rosout_t *rosout,
-                const char *s,
+void rosout_out(const char *s,
                 const char *file,
                 const char *func,
                 uint32_t line,

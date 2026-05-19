@@ -22,7 +22,7 @@ sync_time_state_t sync_time_state = SYNC_TIME_UNSYNCED;
 
 static picoros_publisher_t publisher_sync_request = {
     .topic = {
-        .name = NULL, //(char *)"sync_time_request",
+        .name = (char *)"sync_time_request",
         .type = ROSTYPE_NAME(ros_String),
         .rihs_hash = ROSTYPE_HASH(ros_String),
     },
@@ -35,7 +35,7 @@ static picoros_publisher_t publisher_sync_request = {
 static void sync_response_cb(uint8_t *rx_data, size_t data_len);
 picoros_subscriber_t subscription_sync_response = {
     .topic = {
-        .name = NULL, //(char *)"sync_time_response",
+        .name = (char *)"sync_time_response",
         .type = ROSTYPE_NAME(ros_TimeReference),
         .rihs_hash = ROSTYPE_HASH(ros_TimeReference),
     },
@@ -178,12 +178,18 @@ bool sync_time_setup(const char *topic_request,
 {
   ESP_LOGD(TAG, "Setting up...");
 
-  ESP_LOGI(TAG, "Declaring publisher on [%s]", topic_request);
-  publisher_sync_request.topic.name = (char *)topic_request;
+  if (topic_request != NULL)
+  {
+    publisher_sync_request.topic.name = (char *)topic_request;
+  }
+  ESP_LOGI(TAG, "Declaring publisher on [%s]\r", publisher_sync_request.topic.name);
   picoros_publisher_declare(&picorosso_node, &publisher_sync_request);
 
-  ESP_LOGI(TAG, "Declaring subscriber on [%s]", topic_response);
-  subscription_sync_response.topic.name = (char *)topic_response;
+  if (topic_request != NULL)
+  {
+    subscription_sync_response.topic.name = (char *)topic_response;
+  }
+  ESP_LOGI(TAG, "Declaring subscriber on [%s]\r", subscription_sync_response.topic.name);
   picoros_subscriber_declare(&picorosso_node, &subscription_sync_response);
 
   ESP_LOGD(TAG, "Setting up done.");

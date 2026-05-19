@@ -10,12 +10,11 @@ picoros_node_t picorosso_node;
 uint8_t picorosso_publisher_buf[PUBLISHER_BUF_SIZE];
 SemaphoreHandle_t picorosso_bufSemaphore = NULL;
 
-#if defined(USE_SYNC_TIME)
+#if USE_SYNC_TIME == 1
 #include "sync_time.h"
 #endif
 
 #include "rosout.h"
-rosout_t picorosso_rosout;
 
 void picorosso_set_timestamp(ros_Time *stamp)
 {
@@ -71,8 +70,8 @@ static const char *reset_reason_string(const RESET_REASON reason)
 }
 
 bool picorosso_setup(const char *node_name,
-                      const char *zenoh_router_address,
-                      const uint32_t domain_id)
+                     const char *zenoh_router_address,
+                     const uint32_t domain_id)
 {
     RESET_REASON reset_reason_0 = rtc_get_reset_reason(0);
     RESET_REASON reset_reason_1 = rtc_get_reset_reason(1);
@@ -99,9 +98,10 @@ bool picorosso_setup(const char *node_name,
     ESP_LOGD(TAG, "RMW initialized.");
 
     ESP_LOGI(TAG, "Starting pico-ros node [%s] domain [%lu]\r", picorosso_node.name, picorosso_node.domain_id);
-    picoros_node_init(&picorosso_node);
+    picoros_res_t ret = picoros_node_init(&picorosso_node);
+    ESP_LOGD(TAG, "picoros_node_init ret: [%lu]\r", ret);
 
-#if defined(USE_SYNC_TIME)
+#if USE_SYNC_TIME == 1
     // Time synchronization
     sync_time_setup(NULL, NULL, NULL);
     if (!sync_time_synchronize_clock())
@@ -111,13 +111,15 @@ bool picorosso_setup(const char *node_name,
 #endif
 
     // Initialize auxiliary modules
-    rosout_setup(&picorosso_rosout, "rosout");
+    ESP_LOGI(TAG, "Initializing picorosso rosout\r", picorosso_node.name, picorosso_node.domain_id);
+    bool ok = rosout_setup("rosout");
+    ESP_LOGD(TAG, "rosout_setup ret: [%s]\r", ok ? "true" : "false");
 
     char reset_reason_str[50] = {0};
     sprintf(reset_reason_str, "Coming from Reset Core0: %d %s", reset_reason_0, reset_reason_string(reset_reason_0));
-    rosout_out(&picorosso_rosout, reset_reason_str, __FILE__, __func__, __LINE__, ROSLOG_INFO);
+    rosout_out(reset_reason_str, __FILE__, __func__, __LINE__, ROSLOG_INFO);
     sprintf(reset_reason_str, "Coming from Reset Core1: %d %s", reset_reason_1, reset_reason_string(reset_reason_1));
-    rosout_out(&picorosso_rosout, reset_reason_str, __FILE__, __func__, __LINE__, ROSLOG_INFO);
+    rosout_out(reset_reason_str, __FILE__, __func__, __LINE__, ROSLOG_INFO);
 
     return true;
 }
